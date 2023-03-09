@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState ,useRef} from 'react';
 import ReactFlow, {
   MiniMap,
   Controls,
@@ -8,7 +8,6 @@ import ReactFlow, {
   addEdge,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
-import './index.css';
 const initialNodeType = [
   { id: '1', position: { x: 500, y: 200 }, data: { label: 'NODE1' } },
   { id: '2', position: { x: 500, y: 350 }, data: { label: 'NODE2' } },
@@ -19,35 +18,21 @@ let id = 2;
 const getId = () => `${++id}`;
 function App() {
   const [addnode, setAddnode] = useState(false);
-  const [inindex,setinindex]=useState()
   const [addChildeNode, setAddChildeNode] = useState(false);
-  const [nodename,setnodename]=useState("")
   const [parentNode, setParentNode] = useState(null);
-  const [tempdata, settempdata] = useState(" ");
+  const [tempdata, settempdata] = useState("");
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodeType);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdge);
-  const [uniquenode, setuniquenode] = useState([])
-  const [inputtype, setInputtype] = useState([])
-  const [inputFields, setInputFields] = useState([false])
+  const [margin,setMargin] = useState(false);
   const onConnect = useCallback(() => setEdges((eds) => addEdge(eds)), [setEdges]);
-  function fun(val) {
-    let temp=JSON.stringify(val)
-  console.log(val.id)
-  // let inindex;
-nodes.map((item,index)=>
-{
-  if(item.id===val.id)
-  {
-
-  setinindex(index)
-  }
-})
-
-// console.log(inindex,nodes[inindex].data.label,"index")
-  }
-
+  let nodeRef = useRef();
   useEffect(() => {
-    //console.log(nodes)
+    let handler=(e)=>{
+      if(!nodeRef.current.contains(e.target)){
+        setMargin(false);
+        console.log(nodeRef.current);
+      }
+    }
     if (addnode) {
       const findFirstNode = nodes.find(item => item.id === initialEdge.target);
       console.log("tempdata", tempdata)
@@ -77,7 +62,6 @@ nodes.map((item,index)=>
       setParentNode(null);
     }
     if (addChildeNode) {
-      // console.log(uniquenode)
       setEdges((eds) => eds.concat({
         id: String(parseInt(Math.random(100000000) * 1000000)),
         source: parentNode.id,
@@ -88,10 +72,9 @@ nodes.map((item,index)=>
         labelBgStyle: { fill: '#FFCC00', color: '#fff', fillOpacity: 0.7 },
       }));
       setAddChildeNode(false);
-      setParentNode(null);                                            
+      setParentNode(null);
     }
-    // console.log(nodename,"name")
-  }, [nodes, edges,nodename])
+  }, [nodes, edges])
   const handleEdgeClick = (e, data) => {
     settempdata(data)
     const findSourceNode = nodes.find((item) => item.id === data.source);
@@ -104,77 +87,39 @@ nodes.map((item,index)=>
     setAddnode(true);
   }
   const handleNodeClick = (e, data) => {
-    //console.log(data)
-    setnodename(" ")
-    setInputFields(" ")
-    fun(data)
-    setuniquenode([...uniquenode,data])
-    setInputFields([...inputFields,data])
-    setInputFields(true)
-    console.log(data)
-    // alert("ok")
-    // console.log(uniquenode)
+    setMargin(data)
     // const filterNodeswithSameSource = nodes.filter((node) => node?.data?.parentId === data?.id);//2
     // console.log(data)
     // console.log(nodes)
     // setNodes((nds) => nds.concat({
+
     //   id: getId(),
     //   position: { x: data.position.x + filterNodeswithSameSource != undefined ? filterNodeswithSameSource.length * 150 : 0, y: data.position.y + 70 },
     //   data: { label: `Node ${id}`, parentId: data.id },
     //   width: 150,
     // }));
     setAddChildeNode(true)
-    // setParentNode(uniquenode);
-    setParentNode(inputFields);
+    setParentNode(data);
   }
-const submitHandler = e => {
-  // e.preventDefault();
-  // console.log(nodename,"name")
-  console.log(nodename)
-  alert("okk")  
-}
-  return ( 
-    <div   onSubmit={submitHandler} style={{ width: '100', height: '100vh' }}>
-      <div className='row' style={{ width: '100', height: '100vh', display:'flex' }}>
-        <div style={{ width: '70%', height: '100vh', background: "#fc2c77" }}>
-    
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onEdgeClick={handleEdgeClick}
-            onNodeClick={handleNodeClick}
-            >
-            <MiniMap />
-           <Controls />
-            <Background /> 
-            {/* <input className="e-s"  type="submit" name=" submit" />  */}
-             <button input className="e-s"  type="submit" name=" submit" onclick="submitHandler()">submit</button> 
-          </ReactFlow>
-        </div>
-        <div  style={{ width: '30%', height: '100vh' }}>
-          <ReactFlow
-            //  nodes={uniquenode}
-          >   
-             </ReactFlow>
-         
-        </div>
-        <div>
-            {
-              inputFields===true? <>  <input className="e-input" type="text"  value={nodename}  onChange={(e)=>
-              {
-                setnodename(e.target.value) 
-                nodes[inindex].data.label=e.target.value
-                setNodes(nodes)
-              }} 
-              key={inindex} placeholder="Enter message" /> </> : " "    
-             }
-          </div>    
-        </div>
-    </div> 
+  return (
+    <div style={{ width: '100', height: '100vh' }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onEdgeClick={handleEdgeClick}
+        onNodeClick={handleNodeClick}
+      >
+
+     
+        <MiniMap />
+        <Controls />
+        <Background />
+      </ReactFlow>
+      <div class="vl"></div>
+    </div>
   );
 }
-export default App;
-
+export default App
